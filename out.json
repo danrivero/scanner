@@ -1,194 +1,130 @@
 {
     "acm.org": {
-        "http_server": "cloudflare",
-        "insecure_http": true,
-        "redirect_to_https": false,
-        "scan_time": 1741507272.518464
+        "root_ca": null,
+        "scan_time": 1741561095.2525227
     },
     "amazon.com": {
-        "http_server": "Server",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507269.0273387
+        "root_ca": null,
+        "scan_time": 1741561095.226011
     },
     "cra.org": {
-        "http_server": "Pagely-ARES/1.21.13",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507272.712719
+        "root_ca": null,
+        "scan_time": 1741561095.2545302
     },
     "ebpf.io": {
-        "http_server": "cloudflare",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507274.2344694
+        "root_ca": null,
+        "scan_time": 1741561095.264533
     },
     "en.wikipedia.org": {
-        "http_server": null,
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507268.8108842
+        "root_ca": null,
+        "scan_time": 1741561095.224071
     },
     "fandom.com": {
-        "http_server": "Varnish",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507269.7456298
+        "root_ca": null,
+        "scan_time": 1741561095.2315264
     },
-    "http://insecure.stevetarzia.com/redirect-hell": {
-        "http_server": "Apache/2.4.62 () OpenSSL/1.0.2k-fips PHP/5.4.16",
-        "insecure_http": true,
-        "redirect_to_https": false,
-        "scan_time": 1741507275.1313455
+    "funfinequietstars.neverssl.com": {
+        "root_ca": null,
+        "scan_time": 1741561095.2705293
     },
     "ieee.org": {
-        "http_server": "BigIP",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507272.9732952
+        "root_ca": null,
+        "scan_time": 1741561095.2565243
     },
     "illinois.edu": {
-        "http_server": "Apache/2.4.62 (Red Hat Enterprise Linux) OpenSSL/3.2.2",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507272.119356
+        "root_ca": null,
+        "scan_time": 1741561095.2495918
     },
     "imdb.com": {
-        "http_server": "Server",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507269.5106966
+        "root_ca": null,
+        "scan_time": 1741561095.230588
     },
     "instagram.com": {
-        "http_server": "proxygen-bolt",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507270.156556
+        "root_ca": null,
+        "scan_time": 1741561095.235603
     },
     "kellogg.northwestern.edu": {
-        "http_server": "Microsoft-IIS/10.0",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507271.526876
+        "root_ca": null,
+        "scan_time": 1741561095.2455242
     },
     "kernel.org": {
-        "http_server": "nginx",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507274.0272064
+        "root_ca": null,
+        "scan_time": 1741561095.2625875
     },
     "lab.senlin.dev": {
-        "http_server": "cloudflare",
-        "insecure_http": true,
-        "redirect_to_https": false,
-        "scan_time": 1741507270.8900075
+        "root_ca": null,
+        "scan_time": 1741561095.2406027
     },
     "lwn.net": {
-        "http_server": "Apache/2.4.62 (CentOS Stream) OpenSSL/3.2.2",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507273.2459638
+        "root_ca": null,
+        "scan_time": 1741561095.2575269
     },
     "mccormick.northwestern.edu": {
-        "http_server": "Apache/2.4.41 (Ubuntu)",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507271.209721
+        "root_ca": null,
+        "scan_time": 1741561095.2445266
     },
     "networks.cs.northwestern.edu": {
-        "http_server": "Caddy",
-        "insecure_http": true,
-        "redirect_to_https": false,
-        "scan_time": 1741507271.0393465
+        "root_ca": null,
+        "scan_time": 1741561095.2426238
     },
     "news.ycombinator.com": {
-        "http_server": "nginx",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507273.5349002
+        "root_ca": null,
+        "scan_time": 1741561095.2595901
     },
     "northwestern.edu": {
-        "http_server": "BigIP",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507270.6116173
+        "root_ca": null,
+        "scan_time": 1741561095.2375884
     },
     "one.one.one.one": {
-        "http_server": null,
-        "insecure_http": true,
-        "redirect_to_https": false,
-        "scan_time": 1741507274.6066148
+        "root_ca": null,
+        "scan_time": 1741561095.2655406
     },
     "pinterest.com": {
-        "http_server": null,
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507269.8664258
+        "root_ca": null,
+        "scan_time": 1741561095.2325916
     },
     "reddit.com": {
-        "http_server": "snooserv",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507273.887911
+        "root_ca": null,
+        "scan_time": 1741561095.2615483
     },
     "rust-lang.org": {
-        "http_server": "AmazonS3",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507274.9634671
+        "root_ca": null,
+        "scan_time": 1741561095.268528
     },
     "senlin.dev": {
-        "http_server": "GitHub.com",
-        "insecure_http": true,
-        "redirect_to_https": false,
-        "scan_time": 1741507270.7821047
+        "root_ca": null,
+        "scan_time": 1741561095.2395282
     },
     "stackoverflow.com": {
-        "http_server": "cloudflare",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507274.714602
+        "root_ca": null,
+        "scan_time": 1741561095.267522
     },
     "stevetarzia.com": {
-        "http_server": "Apache/2.4.62 () OpenSSL/1.0.2k-fips PHP/5.4.16",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507272.324999
+        "root_ca": null,
+        "scan_time": 1741561095.2515235
     },
     "tripadvisor.com": {
-        "http_server": "Varnish",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507269.9945922
+        "root_ca": null,
+        "scan_time": 1741561095.2345366
     },
     "uchicago.edu": {
-        "http_server": "Apache",
-        "insecure_http": true,
-        "redirect_to_https": false,
-        "scan_time": 1741507271.876405
+        "root_ca": null,
+        "scan_time": 1741561095.248527
     },
     "users.cs.northwestern.edu": {
-        "http_server": "Apache",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507271.7149632
+        "root_ca": null,
+        "scan_time": 1741561095.2465653
     },
     "walmart.com": {
-        "http_server": "AkamaiGHost",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507270.3310575
+        "root_ca": null,
+        "scan_time": 1741561095.2365363
     },
     "yelp.com": {
-        "http_server": "Varnish",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507269.2444603
+        "root_ca": null,
+        "scan_time": 1741561095.2270007
     },
     "youtube.com": {
-        "http_server": "ESF",
-        "insecure_http": true,
-        "redirect_to_https": true,
-        "scan_time": 1741507268.6031911
+        "root_ca": null,
+        "scan_time": 1741561095.2230039
     }
 }

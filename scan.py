@@ -2,11 +2,23 @@ import subprocess
 import sys
 import json
 import time
+import socket
+import re
+# import maxminddb
 
 input = sys.argv[1]
 output = sys.argv[2]
 print(input)
 print(output)
+
+TLS_VERSIONS = {
+    "SSLv2": "-ssl2",
+    "SSLv3": "-ssl3",
+    "TLSv1.0": "-tls1",
+    "TLSv1.1": "-tls1_1",
+    "TLSv1.2": "-tls1_2",
+    "TLSv1.3": "-tls1_3"
+}
 
 def get_ip_addresses(site, resolvers, record_type):
     ip_addresses = set()
@@ -51,31 +63,32 @@ def get_http_server(site):
 
 def get_http_redirects(site):
     try:
-        insecure_http = True
+        insecure_http = False
         redirect_to_https = False
 
+        with socket.create_connection((site, 80), timeout=2):
+            insecure_http = True
+        
         if insecure_http:
-            result = subprocess.check_output(["curl", "-I", site], timeout=2, stderr=subprocess.STDOUT).decode("utf-8")
             redirects = 0
-
-            while "HTTP" in result and redirects < 10:
+            new_site = site
+            while redirects < 10:
+                result = subprocess.check_output(["curl", "-I", new_site], timeout=2, stderr=subprocess.STDOUT).decode("utf-8")
                 index = result.find("HTTP")
                 start_index = result.find(" ", index) + 1
                 end_index = result.find(" ", start_index)
-                response_code = result[start_index:end_index]
-                print(response_code)
-                if not response_code.startswith("3"):
+                response_code = int(result[start_index:end_index])
+                
+                if response_code // 100 != 3:
                     break
-
                 redirect_index = result.lower().find("location:") + 10
                 end_redirect_index = result.find("\n", redirect_index)
-                redirect = result[redirect_index:end_redirect_index]
-                print(redirect)
+                new_site = result[redirect_index:end_redirect_index]
 
-                if redirect.startswith("https"):
+                if new_site.startswith("https"):
                     redirect_to_https = True
                     break
-                result = subprocess.check_output(["curl", "-I", redirect], timeout=2, stderr=subprocess.STDOUT).decode("utf-8")
+                
                 redirects += 1
 
     except subprocess.CalledProcessError:
@@ -84,7 +97,140 @@ def get_http_redirects(site):
     except Exception as e:
         sys.stderr.write(f"Error getting redirect for {site}: {e}\n")
 
+    except (socket.timeout, ConnectionRefusedError):
+        pass
+
     return insecure_http, redirect_to_https
+
+def check_hsts(site):
+    try:
+        result = subprocess.check_output(
+        ["curl", "-s", "-D", "-", f"https://{site}"],
+        text=True
+        )
+        response_headers = result.lower()
+        return "strict-transport-security:" in response_headers
+
+    except subprocess.TimeoutExpired:
+        sys.stderr.write(f"Timeout checking HSTS for {site}\n")
+
+    except Exception as e:
+        sys.stderr.write(f"Error checking HSTS for {site}: {e}\n")
+
+    return False
+    
+def get_tls_versions(site):
+    supported_versions = []
+    print(TLS_VERSIONS)
+
+    for version, flag in TLS_VERSIONS.items():
+        try:
+            print(f"openssl s_client {flag} -connect {site}:443")
+            subprocess.check_output(["openssl", "s_client", flag, "-connect", f"{site}:443"], input=b"", timeout=5, stderr=subprocess.DEVNULL).decode('utf-8')
+            supported_versions.append(version)
+
+        except subprocess.TimeoutExpired:
+            sys.stderr.write(f"Timeout checking TLS version {version} for {site}\n")
+
+        except subprocess.CalledProcessError:
+            sys.stderr.write(f"Error checking TLS version {version} for {site}\n")
+
+        except Exception as e:
+            sys.stderr.write(f"Unexpected error checking TLS version {version} for {site}: {e}\n")
+
+    return supported_versions
+
+def get_root_ca(site):
+    try:
+        command = f"echo | openssl s_client -connect {site}:443 -showcerts"
+        result = subprocess.check_output(command, shell=True, timeout=10, stderr=subprocess.STDOUT).decode('utf-8')
+        index = result.find("O=")+2
+        end_index = result.find(",", index)
+        #certificates = result.split(b"-----BEGIN CERTIFICATE-----")
+
+        #if len(certificates) < 2:
+        #    return None
+        
+        #root_cert = b"-----BEGIN CERTIFICATE-----" + certificates[-1]
+        #root_info = subprocess.check_output(["openssl", "x509", "-noout", "-subject"], input=root_cert, timeout=5, stderr=subprocess.DEVNULL)
+        #match = re.search(r"O\s*=\s*([^,]+)", root_info.decode())
+        #return match.group(1).strip() if match else None
+        return result[index:end_index]
+
+    except subprocess.TimeoutExpired:
+        sys.stderr.write(f"Timeout checking Root CA for {site}\n")
+
+    except subprocess.CalledProcessError:
+        sys.stderr.write(f"Error checking Root CA for {site}\n")
+
+    except Exception as e:
+        sys.stderr.write(f"Unexpected error checking Root CA for {site}: {e}\n")
+    
+    return None
+
+def get_rdns_names(ip_addresses):
+    rdns_names = set()
+    for ip in ip_addresses:
+        try:
+            result = subprocess.check_output(["nslookup", ip], timeout=3, stderr=subprocess.DEVNULL)
+
+            lines = result.splitlines()
+            for line in lines:
+                if b"name =" in line:
+                    rdns_name = line.split(b"=")[-1].strip().decode()
+                    rdns_names.add(rdns_name)
+
+        except subprocess.TimeoutExpired:
+            sys.stderr.write(f"Timeout checking rDNS for {ip}\n")
+
+        except subprocess.CalledProcessError:
+            sys.stderr.write(f"Error checking rDNS for {ip}\n")
+
+        except Exception as e:
+            sys.stderr.write(f"Unexpected error checking rDNS for {ip}: {e}\n")
+
+        return sorted(rdns_names)
+
+def get_rtt_range(ip_addresses, port=443):
+    if not ip_addresses:
+        return None
+    
+    rtt_times = []
+
+    for ip in ip_addresses:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(2)
+
+            start_time = time.time()
+
+            s.connect((ip, port))
+
+            end_time = time.time()
+
+            rtt_ms = (end_time - start_time) * 1000
+            rtt_times.append(rtt_ms)
+
+            s.close()
+
+        except (socket.timeout, socket.error):
+                sys.stderr.write(f"Timeout or error checking RTT for {ip}\n")
+
+        finally:
+            s.close()
+
+        return [round(min(rtt_times), 2), round(max(rtt_times), 2)] if rtt_times else None
+
+# def get_geo_locations(ip_addresses, db_path="GeoLite2-City.mmdb"):
+#     if not ip_addresses:
+#         return []
+
+#     unique_locations = set()
+
+#     try:
+#         pass
+#     except FileNotFoundError:
+#         sys.stderr.write
 
 resolvers_file = "public_dns_resolvers.txt"
 with open(resolvers_file, "r") as f:
@@ -100,10 +246,18 @@ with open(input, "r") as f:
             site_dictionary["scan_time"] = time.time()
             #site_dictionary["ipv4_addresses"] = get_ip_addresses(site, resolvers, "A")
             #site_dictionary["ipv6_addresses"] = get_ip_addresses(site, resolvers, "AAAA")
-            site_dictionary["http_server"] = get_http_server(site)
-            insecure_http, redirect_to_https = get_http_redirects(site)
-            site_dictionary["insecure_http"] = insecure_http
-            site_dictionary["redirect_to_https"] = redirect_to_https
+            # site_dictionary["http_server"] = get_http_server(site)
+
+            # insecure_http, redirect_to_https = get_http_redirects(site)
+            # site_dictionary["insecure_http"] = insecure_http
+            # site_dictionary["redirect_to_https"] = redirect_to_https
+            # site_dictionary["hsts"] = check_hsts(site)
+            # site_dictionary["tls_versions"] = get_tls_versions(site)
+            site_dictionary["root_ca"] = get_root_ca(site)
+            # site_dictionary["rdns_names"] = get_rdns_names(site_dictionary["ipv4_addresses"])
+            # site_dictionary["rtt_range"] = get_rtt_range(site_dictionary["ipv4_addresses"])
+
+            
             json_dictionary[site] = site_dictionary
 
 with open(output, "w") as g:
