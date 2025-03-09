@@ -1,0 +1,126 @@
+{
+    "acm.org": {
+        "http_server": "cloudflare",
+        "scan_time": 1741480765.5144427
+    },
+    "amazon.com": {
+        "http_server": "Server",
+        "scan_time": 1741480764.5928278
+    },
+    "cra.org": {
+        "http_server": "Pagely-ARES/1.21.13",
+        "scan_time": 1741480765.5606296
+    },
+    "ebpf.io": {
+        "http_server": "cloudflare",
+        "scan_time": 1741480766.08876
+    },
+    "en.wikipedia.org": {
+        "http_server": null,
+        "scan_time": 1741480764.5154035
+    },
+    "fandom.com": {
+        "http_server": "Varnish",
+        "scan_time": 1741480764.8297021
+    },
+    "ieee.org": {
+        "http_server": "BigIP",
+        "scan_time": 1741480765.631769
+    },
+    "illinois.edu": {
+        "http_server": "Apache/2.4.62 (Red Hat Enterprise Linux) OpenSSL/3.2.2",
+        "scan_time": 1741480765.4252262
+    },
+    "imdb.com": {
+        "http_server": "Server",
+        "scan_time": 1741480764.7491677
+    },
+    "instagram.com": {
+        "http_server": "proxygen-bolt",
+        "scan_time": 1741480764.9629786
+    },
+    "kellogg.northwestern.edu": {
+        "http_server": "Microsoft-IIS/10.0",
+        "scan_time": 1741480765.2940392
+    },
+    "kernel.org": {
+        "http_server": "nginx",
+        "scan_time": 1741480766.0048964
+    },
+    "lab.senlin.dev": {
+        "http_server": "cloudflare",
+        "scan_time": 1741480765.15521
+    },
+    "lwn.net": {
+        "http_server": "Apache/2.4.62 (CentOS Stream) OpenSSL/3.2.2",
+        "scan_time": 1741480765.711938
+    },
+    "mccormick.northwestern.edu": {
+        "http_server": "Apache/2.4.41 (Ubuntu)",
+        "scan_time": 1741480765.2690237
+    },
+    "networks.cs.northwestern.edu": {
+        "http_server": "Caddy",
+        "scan_time": 1741480765.248024
+    },
+    "news.ycombinator.com": {
+        "http_server": "nginx",
+        "scan_time": 1741480765.8203914
+    },
+    "northwestern.edu": {
+        "http_server": "BigIP",
+        "scan_time": 1741480765.0686457
+    },
+    "one.one.one.one": {
+        "http_server": "cloudflare",
+        "scan_time": 1741480766.2194238
+    },
+    "pinterest.com": {
+        "http_server": null,
+        "scan_time": 1741480764.8897045
+    },
+    "reddit.com": {
+        "http_server": "snooserv",
+        "scan_time": 1741480765.9758933
+    },
+    "rust-lang.org": {
+        "http_server": "AmazonS3",
+        "scan_time": 1741480766.331681
+    },
+    "senlin.dev": {
+        "http_server": "GitHub.com",
+        "scan_time": 1741480765.0946596
+    },
+    "stackoverflow.com": {
+        "http_server": "cloudflare",
+        "scan_time": 1741480766.2554235
+    },
+    "stevetarzia.com": {
+        "http_server": "Apache/2.4.62 () OpenSSL/1.0.2k-fips PHP/5.4.16",
+        "scan_time": 1741480765.4774349
+    },
+    "tripadvisor.com": {
+        "http_server": "Varnish",
+        "scan_time": 1741480764.9358778
+    },
+    "uchicago.edu": {
+        "http_server": "Apache",
+        "scan_time": 1741480765.3566787
+    },
+    "users.cs.northwestern.edu": {
+        "http_server": "Apache",
+        "scan_time": 1741480765.3362782
+    },
+    "walmart.com": {
+        "http_server": "AkamaiGHost",
+        "scan_time": 1741480764.9900122
+    },
+    "yelp.com": {
+        "http_server": "Varnish",
+        "scan_time": 1741480764.6733975
+    },
+    "youtube.com": {
+        "http_server": "ESF",
+        "scan_time": 1741480764.462764
+    }
+}
