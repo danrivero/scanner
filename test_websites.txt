@@ -30,3 +30,4 @@ ebpf.io
 one.one.one.one
 stackoverflow.com
 rust-lang.org
+http://insecure.stevetarzia.com/redirect-hell
