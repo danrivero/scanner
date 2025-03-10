@@ -3,8 +3,8 @@ import sys
 import json
 import time
 import socket
-import re
-# import maxminddb
+import maxminddb
+import os
 
 input = sys.argv[1]
 output = sys.argv[2]
@@ -121,11 +121,9 @@ def check_hsts(site):
     
 def get_tls_versions(site):
     supported_versions = []
-    print(TLS_VERSIONS)
 
     for version, flag in TLS_VERSIONS.items():
         try:
-            print(f"openssl s_client {flag} -connect {site}:443")
             subprocess.check_output(["openssl", "s_client", flag, "-connect", f"{site}:443"], input=b"", timeout=5, stderr=subprocess.DEVNULL).decode('utf-8')
             supported_versions.append(version)
 
@@ -143,7 +141,7 @@ def get_tls_versions(site):
 def get_root_ca(site):
     try:
         command = f"echo | openssl s_client -connect {site}:443 -showcerts"
-        result = subprocess.check_output(command, shell=True, timeout=10, stderr=subprocess.STDOUT).decode('utf-8')
+        result = subprocess.check_output(command, shell=True, input = b"", timeout=10, stderr=subprocess.STDOUT).decode('utf-8')
         index = result.find("O=")+2
         end_index = result.find(",", index)
         #certificates = result.split(b"-----BEGIN CERTIFICATE-----")
@@ -172,12 +170,11 @@ def get_rdns_names(ip_addresses):
     rdns_names = set()
     for ip in ip_addresses:
         try:
-            result = subprocess.check_output(["nslookup", ip], timeout=3, stderr=subprocess.DEVNULL)
-
+            result = subprocess.check_output(["nslookup", ip], timeout=3, stderr=subprocess.DEVNULL).decode('utf-8')
             lines = result.splitlines()
             for line in lines:
-                if b"name =" in line:
-                    rdns_name = line.split(b"=")[-1].strip().decode()
+                if "Name:" in line:
+                    rdns_name = line.split(":")[-1].strip()
                     rdns_names.add(rdns_name)
 
         except subprocess.TimeoutExpired:
@@ -191,46 +188,66 @@ def get_rdns_names(ip_addresses):
 
         return sorted(rdns_names)
 
-def get_rtt_range(ip_addresses, port=443):
+def get_rtt_range(ip_addresses):
     if not ip_addresses:
         return None
     
     rtt_times = []
 
     for ip in ip_addresses:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(2)
+        for port in [80, 22, 443]:
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(2)
+                    start_time = time.time()
 
-            start_time = time.time()
+                    s.connect((ip, port))
+                    s.sendto(b"hi", (ip, port))
+                    _, _ = s.recvfrom(1024)
 
-            s.connect((ip, port))
+                    end_time = time.time()
 
-            end_time = time.time()
+                    rtt_ms = (end_time - start_time) * 1000
+                    rtt_times.append(rtt_ms)
 
-            rtt_ms = (end_time - start_time) * 1000
-            rtt_times.append(rtt_ms)
+            except (socket.timeout, socket.error):
+                    sys.stderr.write(f"Timeout or error checking RTT for {ip}:{port}\n")
 
-            s.close()
+            finally:
+                s.close()
 
-        except (socket.timeout, socket.error):
-                sys.stderr.write(f"Timeout or error checking RTT for {ip}\n")
+    return [round(min(rtt_times), 2), round(max(rtt_times), 2)] if rtt_times else None
 
-        finally:
-            s.close()
+def get_geo_locations(ip_addresses):
+    if not ip_addresses:
+        return []
 
-        return [round(min(rtt_times), 2), round(max(rtt_times), 2)] if rtt_times else None
+    unique_locations = set()
 
-# def get_geo_locations(ip_addresses, db_path="GeoLite2-City.mmdb"):
-#     if not ip_addresses:
-#         return []
+    try:
+        db_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "GeoLite2-City.mmdb")
+        with maxminddb.open_database(db_path) as reader:
+            for ip in ip_addresses:
+                try:
+                    geo_data = reader.get(ip)
+                    if not geo_data:
+                        continue
 
-#     unique_locations = set()
+                    city = geo_data.get("city", {}).get("names", {}).get("en", "")
+                    state = geo_data.get("subdivisions", [{}])[0].get("names", {}).get("en", "")
+                    country = geo_data.get("country", {}).get("names", {}).get("en", "")
 
-#     try:
-#         pass
-#     except FileNotFoundError:
-#         sys.stderr.write
+                    location = ", ".join(filter(None, [city, state, country]))
+                    if location:
+                        unique_locations.add(location)
+
+                except Exception as e:
+                    sys.stderr.write(f"Error fetching geo-location for {ip}: {e}\n")
+
+    except FileNotFoundError:
+        sys.stderr.write(f"Error trying to find {db_path}: {e}")
+
+    return list(unique_locations)
 
 resolvers_file = "public_dns_resolvers.txt"
 with open(resolvers_file, "r") as f:
@@ -244,8 +261,8 @@ with open(input, "r") as f:
             site_dictionary = {}
 
             site_dictionary["scan_time"] = time.time()
-            #site_dictionary["ipv4_addresses"] = get_ip_addresses(site, resolvers, "A")
-            #site_dictionary["ipv6_addresses"] = get_ip_addresses(site, resolvers, "AAAA")
+            site_dictionary["ipv4_addresses"] = get_ip_addresses(site, resolvers, "A")
+            # site_dictionary["ipv6_addresses"] = get_ip_addresses(site, resolvers, "AAAA")
             # site_dictionary["http_server"] = get_http_server(site)
 
             # insecure_http, redirect_to_https = get_http_redirects(site)
@@ -253,10 +270,10 @@ with open(input, "r") as f:
             # site_dictionary["redirect_to_https"] = redirect_to_https
             # site_dictionary["hsts"] = check_hsts(site)
             # site_dictionary["tls_versions"] = get_tls_versions(site)
-            site_dictionary["root_ca"] = get_root_ca(site)
+            # site_dictionary["root_ca"] = get_root_ca(site)
             # site_dictionary["rdns_names"] = get_rdns_names(site_dictionary["ipv4_addresses"])
             # site_dictionary["rtt_range"] = get_rtt_range(site_dictionary["ipv4_addresses"])
-
+            site_dictionary["geo_locations"] = get_geo_locations(site_dictionary["ipv4_addresses"])
             
             json_dictionary[site] = site_dictionary
 

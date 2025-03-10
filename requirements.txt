@@ -4,6 +4,7 @@ fonttools==4.56.0
 importlib_resources==6.5.2
 kiwisolver==1.4.7
 matplotlib==3.9.4
+maxminddb==2.6.3
 networkx==3.2.1
 numpy==2.0.2
 packaging==24.2
