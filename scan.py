@@ -144,15 +144,6 @@ def get_root_ca(site):
         result = subprocess.check_output(command, shell=True, input = b"", timeout=10, stderr=subprocess.STDOUT).decode('utf-8')
         index = result.find("O=")+2
         end_index = result.find(",", index)
-        #certificates = result.split(b"-----BEGIN CERTIFICATE-----")
-
-        #if len(certificates) < 2:
-        #    return None
-        
-        #root_cert = b"-----BEGIN CERTIFICATE-----" + certificates[-1]
-        #root_info = subprocess.check_output(["openssl", "x509", "-noout", "-subject"], input=root_cert, timeout=5, stderr=subprocess.DEVNULL)
-        #match = re.search(r"O\s*=\s*([^,]+)", root_info.decode())
-        #return match.group(1).strip() if match else None
         return result[index:end_index]
 
     except subprocess.TimeoutExpired:
@@ -198,23 +189,20 @@ def get_rtt_range(ip_addresses):
         for port in [80, 22, 443]:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.settimeout(2)
+                    s.settimeout(10)
                     start_time = time.time()
-
+                
                     s.connect((ip, port))
                     s.sendto(b"hi", (ip, port))
                     _, _ = s.recvfrom(1024)
-
+                
                     end_time = time.time()
-
+                
                     rtt_ms = (end_time - start_time) * 1000
                     rtt_times.append(rtt_ms)
 
-            except (socket.timeout, socket.error):
-                    sys.stderr.write(f"Timeout or error checking RTT for {ip}:{port}\n")
-
-            finally:
-                s.close()
+            except Exception as e:
+                    sys.stderr.write(f"Timeout or error checking RTT for {ip}:{e}\n")
 
     return [round(min(rtt_times), 2), round(max(rtt_times), 2)] if rtt_times else None
 
@@ -262,17 +250,17 @@ with open(input, "r") as f:
 
             site_dictionary["scan_time"] = time.time()
             site_dictionary["ipv4_addresses"] = get_ip_addresses(site, resolvers, "A")
-            # site_dictionary["ipv6_addresses"] = get_ip_addresses(site, resolvers, "AAAA")
-            # site_dictionary["http_server"] = get_http_server(site)
+            site_dictionary["ipv6_addresses"] = get_ip_addresses(site, resolvers, "AAAA")
+            site_dictionary["http_server"] = get_http_server(site)
 
-            # insecure_http, redirect_to_https = get_http_redirects(site)
-            # site_dictionary["insecure_http"] = insecure_http
-            # site_dictionary["redirect_to_https"] = redirect_to_https
-            # site_dictionary["hsts"] = check_hsts(site)
-            # site_dictionary["tls_versions"] = get_tls_versions(site)
-            # site_dictionary["root_ca"] = get_root_ca(site)
-            # site_dictionary["rdns_names"] = get_rdns_names(site_dictionary["ipv4_addresses"])
-            # site_dictionary["rtt_range"] = get_rtt_range(site_dictionary["ipv4_addresses"])
+            insecure_http, redirect_to_https = get_http_redirects(site)
+            site_dictionary["insecure_http"] = insecure_http
+            site_dictionary["redirect_to_https"] = redirect_to_https
+            site_dictionary["hsts"] = check_hsts(site)
+            site_dictionary["tls_versions"] = get_tls_versions(site)
+            site_dictionary["root_ca"] = get_root_ca(site)
+            site_dictionary["rdns_names"] = get_rdns_names(site_dictionary["ipv4_addresses"])
+            site_dictionary["rtt_range"] = get_rtt_range(site_dictionary["ipv4_addresses"])
             site_dictionary["geo_locations"] = get_geo_locations(site_dictionary["ipv4_addresses"])
             
             json_dictionary[site] = site_dictionary
