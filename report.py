@@ -13,18 +13,18 @@ table.set_cols_width([20, 10, 20, 41, 20, 8, 8, 8, 20, 20, 20, 20, 20])
 table.add_row(["Site", "Scan Time", "IPv4s", "IPv6s", "HTTP Server", "Insecure HTTP", "HTTPS Redirect", "HSTS", "TLS Versions", "Root CA", "RDNS Names", "RTT Range", "Geo Locs"])
 for key in data_dict:
     row = [key,
-           data_dict[key]["scan_time"],
-           data_dict[key]["ipv4_addresses"],
-           data_dict[key]["ipv6_addresses"],
-           data_dict[key]["http_server"],
-           data_dict[key]["insecure_http"],
-           data_dict[key]["redirect_to_https"],
-           data_dict[key]["hsts"],
-           data_dict[key]["tls_versions"],
-           data_dict[key]["root_ca"],
-           data_dict[key]["rdns_names"],
-           data_dict[key]["rtt_range"],
-           data_dict[key]["geo_locations"]]
+            data_dict[key].get("scan_time"),
+            data_dict[key].get("ipv4_addresses"),
+            data_dict[key].get("ipv6_addresses"),
+            data_dict[key].get("http_server"),
+            data_dict[key].get("insecure_http"),
+            data_dict[key].get("redirect_to_https"),
+            data_dict[key].get("hsts"),
+            data_dict[key].get("tls_versions"),
+            data_dict[key].get("root_ca"),
+            data_dict[key].get("rdns_names"),
+            data_dict[key].get("rtt_range"),
+            data_dict[key].get("geo_locations"),]
     table.add_row(row)
 
 with open(output, "w") as g:
@@ -33,7 +33,7 @@ with open(output, "w") as g:
 table = texttable.Texttable()
 rtts = []
 for key in data_dict:
-    rtts.append((key, data_dict[key]["rtt_range"]))
+    rtts.append((key, data_dict[key].get("rtt_range")))
 sorted_rtts = sorted(rtts, key=lambda x: (float('inf') if x[1] is None else x[1][0]))
 
 table.add_row(["Domain", "RTT Range"])
@@ -47,7 +47,7 @@ with open(output, "a") as g:
 table = texttable.Texttable()
 certificates = {}
 for key in data_dict:
-    certificate = data_dict[key]["root_ca"]
+    certificate = data_dict[key].get("root_ca")
     if certificate is not None:
         if certificate not in certificates:
             certificates[certificate] = 1
@@ -69,7 +69,7 @@ with open(output, "a") as g:
 table = texttable.Texttable()
 web_servers = {}
 for key in data_dict:
-    web_server = data_dict[key]["http_server"]
+    web_server = data_dict[key].get("http_server")
     if web_server is not None:
         if web_server not in web_servers:
             web_servers[web_server] = 1
@@ -102,25 +102,25 @@ ipv6_count = 0
 
 for key in data_dict:
     domain = data_dict[key]
-    if domain["insecure_http"]:
+    if domain.get("insecure_http"):
         http_count += 1
-    if domain["redirect_to_https"]:
+    if domain.get("redirect_to_https"):
         redirect_count += 1
-    if domain["hsts"]:
+    if domain.get("hsts"):
         hsts_count += 1
-    if len(domain["ipv6_addresses"]) == 0:
+    if "ipv6_addresses" in domain and len(domain["ipv6_addresses"]) == 0:
         ipv6_count += 1
-    if "SSLv2" in domain["tls_versions"]:
+    if "tls_versions" in domain and "SSLv2" in domain["tls_versions"]:
         sslv2_count += 1
-    if "SSLv3" in domain["tls_versions"]:
+    if "tls_versions" in domain and "SSLv3" in domain["tls_versions"]:
         sslv3_count += 1
-    if "TLSv1.0" in domain["tls_versions"]:
+    if "tls_versions" in domain and "TLSv1.0" in domain["tls_versions"]:
         tlsv10_count += 1
-    if "TLSv1.1" in domain["tls_versions"]:
+    if "tls_versions" in domain and "TLSv1.1" in domain["tls_versions"]:
         tlsv11_count += 1
-    if "TLSv1.2" in domain["tls_versions"]:
+    if "tls_versions" in domain and "TLSv1.2" in domain["tls_versions"]:
         tlsv12_count += 1
-    if "TLSv1.3" in domain["tls_versions"]:
+    if "tls_versions" in domain and "TLSv1.3" in domain["tls_versions"]:
         tlsv13_count += 1
 
 sslv2_percent = (sslv2_count / total) * 100
@@ -151,21 +151,3 @@ table.add_rows([["Domain Support", "Percentage"],
 
 with open(output, "a") as g:
     g.write(table.draw() + "\n\n")
-
-TLS_VERSIONS = {
-    "SSLv2": "-ssl2",
-    "SSLv3": "-ssl3",
-    "TLSv1.0": "-tls1",
-    "TLSv1.1": "-tls1_1",
-    "TLSv1.2": "-tls1_2",
-    "TLSv1.3": "-tls1_3"
-}
-
-#A table showing the number of occurrences for each observed root certificate authority (from Part 2i), sorted from most popular to least.
-#A table showing the number of occurrences of each web server (from Part 2d), ordered from most popular to least.
-#A table showing the percentage of scanned domains supporting:
-#each version of TLS listed in Part 2h. I expect to see close to zero percent for SSLv2 and SSLv3.
-        #"plain http" (Part 2e)
-        #"https redirect" (Part 2f)
-        #"hsts" (Part 2g)
-        #"ipv6" (from Part 2c)

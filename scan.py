@@ -5,11 +5,10 @@ import time
 import socket
 import maxminddb
 import os
+import shutil
 
 input = sys.argv[1]
 output = sys.argv[2]
-print(input)
-print(output)
 
 TLS_VERSIONS = {
     "SSLv2": "-ssl2",
@@ -124,7 +123,7 @@ def get_tls_versions(site):
 
     for version, flag in TLS_VERSIONS.items():
         try:
-            subprocess.check_output(["openssl", "s_client", flag, "-connect", f"{site}:443"], input=b"", timeout=5, stderr=subprocess.DEVNULL).decode('utf-8')
+            subprocess.check_output(["openssl", "s_client", flag, "-connect", f"{site}:443"], input=b"", timeout=2, stderr=subprocess.DEVNULL).decode('utf-8')
             supported_versions.append(version)
 
         except subprocess.TimeoutExpired:
@@ -141,7 +140,7 @@ def get_tls_versions(site):
 def get_root_ca(site):
     try:
         command = f"echo | openssl s_client -connect {site}:443 -showcerts"
-        result = subprocess.check_output(command, shell=True, input = b"", timeout=10, stderr=subprocess.STDOUT).decode('utf-8')
+        result = subprocess.check_output(command, shell=True, input = b"", timeout=5, stderr=subprocess.STDOUT).decode('utf-8')
         index = result.find("O=")+2
         end_index = result.find(",", index)
         return result[index:end_index]
@@ -189,7 +188,7 @@ def get_rtt_range(ip_addresses):
         for port in [80, 22, 443]:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.settimeout(10)
+                    s.settimeout(2)
                     start_time = time.time()
                 
                     s.connect((ip, port))
@@ -241,6 +240,17 @@ resolvers_file = "public_dns_resolvers.txt"
 with open(resolvers_file, "r") as f:
     resolvers = [line.strip() for line in f if line.strip()]
 
+nslookup_check = False
+curl_check = False
+openssl_check = False
+
+if shutil.which("nslookup"):
+    nslookup_check = True
+if shutil.which("curl"):
+    curl_check = True
+if shutil.which("openssl"):
+    openssl_check = True
+
 json_dictionary = {}
 with open(input, "r") as f:
     for line in f:
@@ -249,19 +259,42 @@ with open(input, "r") as f:
             site_dictionary = {}
 
             site_dictionary["scan_time"] = time.time()
-            site_dictionary["ipv4_addresses"] = get_ip_addresses(site, resolvers, "A")
-            site_dictionary["ipv6_addresses"] = get_ip_addresses(site, resolvers, "AAAA")
-            site_dictionary["http_server"] = get_http_server(site)
 
-            insecure_http, redirect_to_https = get_http_redirects(site)
-            site_dictionary["insecure_http"] = insecure_http
-            site_dictionary["redirect_to_https"] = redirect_to_https
-            site_dictionary["hsts"] = check_hsts(site)
-            site_dictionary["tls_versions"] = get_tls_versions(site)
-            site_dictionary["root_ca"] = get_root_ca(site)
-            site_dictionary["rdns_names"] = get_rdns_names(site_dictionary["ipv4_addresses"])
-            site_dictionary["rtt_range"] = get_rtt_range(site_dictionary["ipv4_addresses"])
-            site_dictionary["geo_locations"] = get_geo_locations(site_dictionary["ipv4_addresses"])
+            if nslookup_check:
+                site_dictionary["ipv4_addresses"] = get_ip_addresses(site, resolvers, "A")
+
+            if nslookup_check:
+                site_dictionary["ipv6_addresses"] = get_ip_addresses(site, resolvers, "AAAA")
+
+            if curl_check:
+                site_dictionary["http_server"] = get_http_server(site)
+
+            if curl_check:
+                insecure_http, redirect_to_https = get_http_redirects(site)
+
+            if curl_check:
+                site_dictionary["insecure_http"] = insecure_http
+
+            if curl_check:
+                site_dictionary["redirect_to_https"] = redirect_to_https
+
+            if curl_check:
+                site_dictionary["hsts"] = check_hsts(site)
+
+            if openssl_check:
+                site_dictionary["tls_versions"] = get_tls_versions(site)
+
+            if openssl_check:
+                site_dictionary["root_ca"] = get_root_ca(site)
+            
+            if nslookup_check:
+                site_dictionary["rdns_names"] = get_rdns_names(site_dictionary["ipv4_addresses"])
+
+            if nslookup_check:
+                site_dictionary["rtt_range"] = get_rtt_range(site_dictionary["ipv4_addresses"])
+
+            if nslookup_check:
+                site_dictionary["geo_locations"] = get_geo_locations(site_dictionary["ipv4_addresses"])
             
             json_dictionary[site] = site_dictionary
 
